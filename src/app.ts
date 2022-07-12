@@ -1,4 +1,4 @@
-import express, { Application, NextFunction } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import { UserRoute } from './controllers/users/user.route';
 
 export class App {
@@ -20,15 +20,14 @@ export class App {
       next();
     });
 
+    this.host.use(`/api/${usersRoute.path}`, usersRoute.router);
+   
     this.host.use((req, res, next) => {
       res.status(404).send('No Endpoint found');
     });
 
-    this.host.use(`/api/${usersRoute.path}`, usersRoute.router);
-    // app.js
-
-    this.host.use((req, res, next) => {
-      res.status(400).json(Error);
+    this.host.use((error:any, req: Request, res: Response, next:NextFunction) => {
+      res.status(400).json(error);
     }); 
   }
 
