@@ -1,12 +1,13 @@
-import { UserStore } from './user.store';
-import { NextFunction, Request, Response } from 'express';
+import { RequestContext } from '@mikro-orm/core';
+import { NotFound } from '@panenco/papi';
+import { User } from '../../../entities/user.entity';
 
 
-export const get = async (req: Request, res: Response, next: NextFunction) => {
-  const user = UserStore.get(req.body.id);
+export const get = async (id: string) => {
+  const em = RequestContext.getEntityManager();
+  const user = await em.findOne(User, { id });
   if (!user) {
-    res.status(404).json({ error: 'User not found' });
-    return;
+    throw new NotFound('userNotFound', 'User not found');
   }
-  res.json(user);
+  return user;
 };
