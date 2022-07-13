@@ -33,6 +33,7 @@ describe('Handler tests', () => {
       orm = await MikroORM.init(ormConfig);
     });
 
+    //add test1 qnd test2 to the user list
     beforeEach(async () => {
       await orm.em.execute(`DROP SCHEMA public CASCADE; CREATE SCHEMA public;`);
       await orm.getMigrator().up();
@@ -41,14 +42,30 @@ describe('Handler tests', () => {
       await em.persistAndFlush(users);
     });
 
-    it('should get users', async () => {
+    it('should get users_TRUE1', async () => {
+      await RequestContext.createAsync(orm.em.fork(), async () => {
+        const [res, total] = await getList(null);
+        expect(res.some((x) => x.name === 'test1')).true;
+      });
+    });
+
+    it('should get users_TRUE2', async () => {
       await RequestContext.createAsync(orm.em.fork(), async () => {
         const [res, total] = await getList(null);
         expect(res.some((x) => x.name === 'test2')).true;
       });
     });
 
-    it('should get user by id', async () => {
+    it('should get user by id-1', async () => {
+      await RequestContext.createAsync(orm.em.fork(), async () => {
+        const res = await get(users[0].id);
+
+        expect(res.name).equal('test1');
+        expect(res.email).equal('test-user+1@panenco.com');
+      });
+    });
+    
+    it('should get user by id-2', async () => {
       await RequestContext.createAsync(orm.em.fork(), async () => {
         const res = await get(users[1].id);
 
@@ -60,7 +77,7 @@ describe('Handler tests', () => {
     it('should fail when getting user by unknown id', async () => {
       await RequestContext.createAsync(orm.em.fork(), async () => {
         try {
-          await get(v4());
+          await get(v4()); //v4 generates a unique, random ID
         } catch (error) {
           expect(error.message).equal('User not found');
           return;
@@ -82,6 +99,7 @@ describe('Handler tests', () => {
         expect(res.email).equal('test-user+new@panenco.com');
       });
     });
+
 
     it('should update user', async () => {
       await RequestContext.createAsync(orm.em.fork(), async () => {

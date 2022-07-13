@@ -40,7 +40,17 @@ describe('Integration tests', () => {
         } as User)
         .expect(StatusCode.created);
 
-      // Login
+      // Create another user
+      const { body: createResponse2} = await request
+      .post(`/api/users`)
+        .send({
+          name: 'test2',
+          email: 'test-user+2@panenco.com',
+          password: 'real secret stuff',
+        } as User)
+        .expect(StatusCode.created);
+
+      // Login first user
       const { body: loginResponse } = await request
         .post(`/api/auth/tokens`)
         .send({
@@ -49,6 +59,16 @@ describe('Integration tests', () => {
         } as User)
         .expect(StatusCode.ok);
       const token = loginResponse.token;
+
+      // Login second user
+      const { body: loginResponse2 } = await request
+        .post(`/api/auth/tokens`)
+        .send({
+          email: 'test-user+2@panenco.com',
+          password: 'real secret stuff',
+        } as User)
+        .expect(StatusCode.ok);
+      const token2 = loginResponse.token;
 
       expect(UserStore.users.some((x) => x.email === createResponse.email)).false;
 
@@ -62,8 +82,8 @@ describe('Integration tests', () => {
       // Get all users
       const { body: getListRes } = await request.get(`/api/users`).set('x-auth', token).expect(StatusCode.ok);
       const { items, count } = getListRes;
-      expect(items.length).equal(1);
-      expect(count).equal(1);
+      expect(items.length).equal(2);
+      expect(count).equal(2);
 
       // Successfully update user
       const { body: updateResponse } = await request
@@ -84,7 +104,7 @@ describe('Integration tests', () => {
       // Get all users again after deleted the only user
       const { body: getNoneResponse } = await request.get(`/api/users`).set('x-auth', token).expect(StatusCode.ok);
       const { count: getNoneCount } = getNoneResponse;
-      expect(getNoneCount).equal(1);
+      expect(getNoneCount).equal(2);
     });
   });
 });
