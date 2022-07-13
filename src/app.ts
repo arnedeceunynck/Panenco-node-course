@@ -36,7 +36,7 @@ export class App {
   }
   listen() {
     this.host.listen(3000, () => {
-      console.info(`:rocket: http://localhost:3000`);
+      console.info(`🚀 http://localhost:3000`);
       console.info(`========================`);
     });
   }

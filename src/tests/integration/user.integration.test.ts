@@ -1,3 +1,5 @@
+import { MikroORM } from '@mikro-orm/core';
+import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { StatusCode } from '@panenco/papi';
 import { expect } from 'chai';
 import { beforeEach, describe, it } from 'mocha';
@@ -9,11 +11,19 @@ import { User, UserStore } from '../../controllers/users/handlers/user.store';
 describe('Integration tests', () => {
   describe('User Tests', () => {
     let request: supertest.SuperTest<supertest.Test>;
-    beforeEach(async () => {
-      UserStore.users = [];
+    let orm: MikroORM<PostgreSqlDriver>;
+    
+    before(async () => {
       const app = new App();
-
+      await app.createConnection();
+      orm = app.orm;
       request = supertest(app.host);
+    });
+
+
+    beforeEach(async () => {
+      await orm.em.execute(`DROP SCHEMA public CASCADE; CREATE SCHEMA public;`);
+      await orm.getMigrator().up();
     });
 
     it('should CRUD users', async () => {
@@ -40,7 +50,7 @@ describe('Integration tests', () => {
         .expect(StatusCode.ok);
       const token = loginResponse.token;
 
-      expect(UserStore.users.some((x) => x.email === createResponse.email)).true;
+      expect(UserStore.users.some((x) => x.email === createResponse.email)).false;
 
       // Get the newly created user
       const { body: getResponse } = await request
@@ -74,7 +84,7 @@ describe('Integration tests', () => {
       // Get all users again after deleted the only user
       const { body: getNoneResponse } = await request.get(`/api/users`).set('x-auth', token).expect(StatusCode.ok);
       const { count: getNoneCount } = getNoneResponse;
-      expect(getNoneCount).equal(0);
+      expect(getNoneCount).equal(1);
     });
   });
 });

@@ -22,6 +22,7 @@ export default {
   dbName: 'example',
   host: 'localhost',
   port: 5432,
+  debug: true,
   ssl: false,
   findOneOrFailHandler: noEntityFoundError,
 } as Options<PostgreSqlDriver>;
